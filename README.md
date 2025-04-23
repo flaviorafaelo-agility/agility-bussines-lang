@@ -1,56 +1,53 @@
 # Bussines Lang
 
-**Bussines Lang** é uma linguagem de programação declarativa e semântica desenvolvida pela Agility Soluções, projetada para agilidade no desenvolvimento de sistemas empresariais com forte integração nativa a IA, CRUD implícito e performance de execução via máquina virtual.
+A **Bussines Lang** é uma linguagem declarativa orientada a negócios, criada para acelerar o desenvolvimento de sistemas empresariais com foco em:
+- Baixa verbosidade
+- Agilidade na modelagem
+- Performance na execução (com suporte a VM e Bytecode)
+- Integração nativa com IA
+- Arquitetura modular
 
-## 🌟 Objetivos
-- Reduzir a verbosidade do código
-- Declarar regras e estrutura com semântica empresarial
-- Suportar geração de APIs REST, documentação e interfaces automaticamente
-- Oferecer integração com VM baseada em bytecode, com execução performática
-- Permitir expressividade com recursos como `if`, `for`, `sum`, `get`, `set`, entre outros
-
----
-
-## 📁 Estrutura de Arquivos e Diretórios
-
-| Arquivo                                 | Descrição |
-|----------------------------------------|-----------|
-| `start.bus`                             | Define quais aplicações devem ser inicializadas pela VM, suas portas e opções de HTTPS. |
-| `erp.application.bus`                  | Define os módulos que pertencem a uma aplicação, como `vendas`, `cadastro`, etc. |
-| `erp.application.settings`             | Contém configurações específicas da aplicação, como o caminho da base de dados. |
-| `vendas.domain.bus`                    | Declara o banco de dados utilizado pelo módulo `vendas`, bem como suas configurações. |
-| `cliente.concept.bus`                  | Define a estrutura da entidade `cliente`, com seus campos, validações, tipos e regras. |
-| `common.types.bus`                     | Define tipos reutilizáveis como `cpf`, `endereco`, `telefone` com validações e máscaras. |
-| `cliente.ativarConta.service.bus`      | Define o serviço `ativarConta` com entrada, saída e a implementação em bloco de código. |
-| `clientes.ui.bus`                      | Representa o layout visual (UI) para o concept `cliente` — a ser interpretado pelo motor de renderização de UI. |
-| `bussines.bnf`                         | Arquivo com a gramática completa em formato BNF da linguagem Bussines Lang. |
+A linguagem foi projetada pela **Agility Soluções** para suportar conceitos como: tipos reutilizáveis, conceitos de domínio (concepts), serviços, views, aplicações e configuração centralizada.
 
 ---
 
-## 🛠️ Componentes principais
+## 📁 Estrutura do projeto
 
-- **Concepts:** definem entidades com estrutura e comportamento implícito (CRUD, validação, integração).
-- **Types:** definem tipos reutilizáveis com semântica, máscaras, regex, etc.
-- **Domains:** agrupam concepts e definem configurações de persistência.
-- **Applications:** organizam os módulos de domínio.
-- **Services:** encapsulam lógica com input/output e bloco de `implementation {}`.
-- **UI:** descreve a visualização declarativa de um concept ou serviço.
-- **Start:** ponto inicial da aplicação, define as aplicações a serem iniciadas.
+```bash
+specification/
+├── bussines.bnf                  # Definição formal da gramática da linguagem
+├── start.bus                     # Arquivo de bootstrap: define quais aplicações subir e em quais portas
+├── erp.application.bus           # Declaração da aplicação ERP e seus módulos
+├── erp.application.settings      # Configuração da aplicação ERP (ex: banco de dados)
+├── vendas.domain.bus             # Declaração do módulo de Vendas e configurações
+├── common.types.bus              # Tipos reutilizáveis (ex: cpf, email, endereco)
+├── cliente.concept.bus           # Declaração do concept Cliente
+├── cliente.ativarConta.service.bus # Serviço para ativar conta do cliente
+└── clientes.ui.bus               # Estrutura visual (view) do concept Cliente
+```
 
 ---
 
-## 📦 Exemplo de Inicialização
+## 🔤 Arquivos e formatos
 
-Arquivo `start.bus`:
+### `bussines.bnf`
 
-```bus
+Contém a gramática da linguagem no estilo BNF. Define a estrutura de todos os blocos como: start, application, concept, type, service, implementation, etc.
+
+---
+
+### `start.bus`
+
+Declara de forma simples as aplicações que a VM deve subir:
+
+```txt
 applications
-  erp
+  app1
     path sistema.erp.application.bus
     port 8080
     https false
 
-  nfe
+  app2
     path sistema.nfe.application.bus
     port 8443
     https true
@@ -60,16 +57,117 @@ applications
 
 ---
 
-## 🧠 Futuro
+### `erp.application.bus`
 
-- Geração de bytecode com serialização de lambdas
-- Execução performática via `call`
-- Debugger integrado para rastreio de execução
-- Integração com IA para geração de serviços e recomendações de campos
+Aponta os módulos que fazem parte da aplicação ERP:
+
+```txt
+modules
+  vendas
+  cadastro
+```
 
 ---
 
-## 🏢 Desenvolvido por
+### `erp.application.settings`
 
-Agility Soluções — Tecnologia com inteligência de negócio.
+Define as configurações da aplicação como banco de dados e opções de autenticação.
 
+```txt
+database sqlserver://localhost/erp
+settings
+  authMode integrated
+  maxConnections 100
+```
+
+---
+
+### `vendas.domain.bus`
+
+Define o banco e configurações específicas do módulo:
+
+```txt
+database sqlserver://localhost/vendas
+settings
+  version 1.0
+```
+
+---
+
+### `common.types.bus`
+
+Define tipos reutilizáveis:
+
+```txt
+cpf string 11 \d{11} 999.999.999-99 "Cadastro de Pessoa Física"
+email string 50 \S+@\S+\.\S+ "E-mail válido"
+endereco
+  rua string
+  numero int
+  cidade string
+```
+
+---
+
+### `cliente.concept.bus`
+
+Define a estrutura de dados do cliente, incluindo campos nativos e tipos customizados:
+
+```txt
+nome string 100 "Nome do cliente"
+email? email
+cpf cpf
+dataNascimento? date
+ativo? bool =true "Está ativo?"
+```
+
+---
+
+### `clientes.ui.bus`
+
+Define a estrutura visual do concept `cliente`, como ordem dos campos e agrupamento. (Exemplo simplificado.)
+
+```txt
+form
+  section "Dados Pessoais"
+    nome
+    email
+    cpf
+    dataNascimento
+```
+
+---
+
+### `cliente.ativarConta.service.bus`
+
+Declara o serviço `ativarConta`, com entrada, saída e implementação:
+
+```txt
+input
+  clienteId string
+
+output
+  status string
+  clienteEmail string
+
+implementation {
+  var cliente = get cliente where id = clienteId
+  if cliente.ativo == false {
+    cliente.ativo = true
+    set cliente
+  }
+  status = "ok"
+  clienteEmail = cliente.email
+}
+```
+
+---
+
+## ✅ Benefícios
+
+- A linguagem elimina repetições.
+- Facilita a leitura e manutenção.
+- Permite expansão gradual (ex: views, módulos externos, suporte à IA).
+- APIs são geradas automaticamente a partir dos `concepts` e `services`.
+
+---
