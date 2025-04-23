@@ -1,53 +1,29 @@
 # Bussines Lang
 
-A **Bussines Lang** é uma linguagem declarativa orientada a negócios, criada para acelerar o desenvolvimento de sistemas empresariais com foco em:
-- Baixa verbosidade
-- Agilidade na modelagem
-- Performance na execução (com suporte a VM e Bytecode)
-- Integração nativa com IA
-- Arquitetura modular
+A **Bussines Lang** é uma linguagem de domínio específico (DSL) criada para modelar aplicações de negócio de forma declarativa, simples e extremamente produtiva. Escrita em arquivos `.bus`, ela tem como principais características:
 
-A linguagem foi projetada pela **Agility Soluções** para suportar conceitos como: tipos reutilizáveis, conceitos de domínio (concepts), serviços, views, aplicações e configuração centralizada.
+- Estrutura semântica própria para negócios
+- Integração nativa com IA e geração automática de CRUD/API
+- Execução baseada em VM e bytecode
+- Baixa verbosidade, alta clareza
 
 ---
 
-## 📁 Estrutura do projeto
-
-```bash
-specification/
-├── bussines.bnf                  # Definição formal da gramática da linguagem
-├── start.bus                     # Arquivo de bootstrap: define quais aplicações subir e em quais portas
-├── erp.application.bus           # Declaração da aplicação ERP e seus módulos
-├── erp.application.settings      # Configuração da aplicação ERP (ex: banco de dados)
-├── vendas.domain.bus             # Declaração do módulo de Vendas e configurações
-├── common.types.bus              # Tipos reutilizáveis (ex: cpf, email, endereco)
-├── cliente.concept.bus           # Declaração do concept Cliente
-├── cliente.ativarConta.service.bus # Serviço para ativar conta do cliente
-└── clientes.ui.bus               # Estrutura visual (view) do concept Cliente
-```
-
----
-
-## 🔤 Arquivos e formatos
-
-### `bussines.bnf`
-
-Contém a gramática da linguagem no estilo BNF. Define a estrutura de todos os blocos como: start, application, concept, type, service, implementation, etc.
-
----
+## 🌐 Arquivos da Linguagem
 
 ### `start.bus`
 
-Declara de forma simples as aplicações que a VM deve subir:
+Define as aplicações que devem ser iniciadas pela VM.
 
-```txt
+**Exemplo**:
+```bus
 applications
-  app1
+  erp
     path sistema.erp.application.bus
     port 8080
     https false
 
-  app2
+  nfe
     path sistema.nfe.application.bus
     port 8443
     https true
@@ -55,13 +31,16 @@ applications
     keyPath /certs/nfe.key
 ```
 
+**Resumo**: Arquivo declarativo responsável por iniciar aplicações e servidores HTTP.
+
 ---
 
 ### `erp.application.bus`
 
-Aponta os módulos que fazem parte da aplicação ERP:
+Define os módulos pertencentes a uma aplicação.
 
-```txt
+**Exemplo**:
+```bus
 modules
   vendas
   cadastro
@@ -71,103 +50,169 @@ modules
 
 ### `erp.application.settings`
 
-Define as configurações da aplicação como banco de dados e opções de autenticação.
+Contém configurações da aplicação como base de dados, timeout e flags.
 
-```txt
-database sqlserver://localhost/erp
+**Exemplo**:
+```bus
+database bussines_erp
 settings
-  authMode integrated
-  maxConnections 100
+  timeout 30
+  retry true
 ```
 
 ---
 
 ### `vendas.domain.bus`
 
-Define o banco e configurações específicas do módulo:
+Configura o domínio (módulo), como tipo de banco e configs locais.
 
-```txt
-database sqlserver://localhost/vendas
+**Exemplo**:
+```bus
+database postgres
 settings
-  version 1.0
+  useSnakeCase true
 ```
 
 ---
 
 ### `common.types.bus`
 
-Define tipos reutilizáveis:
+Define tipos reutilizáveis como `cpf`, `email`, `endereco`.
 
-```txt
+**Exemplo**:
+```bus
 cpf string 11 \d{11} 999.999.999-99 "Cadastro de Pessoa Física"
-email string 50 \S+@\S+\.\S+ "E-mail válido"
+
 endereco
-  rua string
-  numero int
-  cidade string
+  rua string "Rua"
+  numero int "Número"
+  cidade string "Cidade"
 ```
+
+**BNF**: Igual ao `concept` com mesma estrutura de campos e anotações opcionais.
 
 ---
 
 ### `cliente.concept.bus`
 
-Define a estrutura de dados do cliente, incluindo campos nativos e tipos customizados:
+Define a entidade cliente com campos, máscaras, validações e default.
 
-```txt
-nome string 100 "Nome do cliente"
-email? email
+**Exemplo**:
+```bus
+nome string 100 "Nome completo"
 cpf cpf
-dataNascimento? date
-ativo? bool =true "Está ativo?"
+email? string 50 \S+@\S+\.\S+ "E-mail"
+ativo? bool =true "Cliente ativo?"
+```
+
+**Campo derivado**:
+```bus
+status := (ativo ? "Ativo" : "Inativo") "Status do cliente"
 ```
 
 ---
 
 ### `clientes.ui.bus`
 
-Define a estrutura visual do concept `cliente`, como ordem dos campos e agrupamento. (Exemplo simplificado.)
+(Planejado) Define o layout visual de um `concept` para renderização em UI.
 
-```txt
+**Exemplo**:
+```bus
+list
+  columns nome, cpf, email, ativo
 form
-  section "Dados Pessoais"
-    nome
-    email
-    cpf
-    dataNascimento
+  fields nome, cpf, email, ativo
 ```
 
 ---
 
 ### `cliente.ativarConta.service.bus`
 
-Declara o serviço `ativarConta`, com entrada, saída e implementação:
+Serviço que ativa a conta de um cliente. Input/output seguem mesmo padrão do concept.
 
-```txt
+**Exemplo**:
+```bus
 input
   clienteId string
 
 output
   status string
-  clienteEmail string
 
 implementation {
-  var cliente = get cliente where id = clienteId
-  if cliente.ativo == false {
-    cliente.ativo = true
-    set cliente
-  }
+  cliente := get cliente where id = clienteId
+  cliente.ativo = true
+  set cliente
   status = "ok"
-  clienteEmail = cliente.email
 }
 ```
 
 ---
 
-## ✅ Benefícios
+## 💻 Anotações da VM
 
-- A linguagem elimina repetições.
-- Facilita a leitura e manutenção.
-- Permite expansão gradual (ex: views, módulos externos, suporte à IA).
-- APIs são geradas automaticamente a partir dos `concepts` e `services`.
+A Bussines VM interpreta bytecodes simples com operações como:
+
+```text
+LOAD_VAR produtos
+BEGIN_FILTER temp1
+ITER_BEGIN produtos
+  LOAD_FIELD p nome
+  PUSH_CONST "Teclado"
+  EQ
+  JUMP_IF_TRUE SKIP_APPEND
+  APPEND temp1 p
+SKIP_APPEND:
+ITER_END
+STORE_VAR produtos temp1
+```
+
+**Exemplo Bussines correspondente**:
+```bus
+produtos -= p => p.nome == "Teclado"
+```
+
+A VM pode usar objetos com `.Call("filterOut", lambda)` para permitir regras dinâmicas, com ou sem pré-compilação via `lambdas_gen.go`.
 
 ---
+
+## 🧠 Extras
+
+### Operações sobre arrays:
+```bus
+produtos += { nome = "Novo" preco = 100.0 estoque = 10 }
+
+produtos -= p => p.nome == "Antigo"
+
+produtos ~= p.nome == "Mouse" {
+  preco = 150.00
+}
+```
+
+---
+
+## 📄 BNF Consolidado
+
+Disponível em: [`specification/bussines.bnf`](./bussines.bnf)
+
+---
+
+## 📁 Estrutura do Projeto
+
+```
+specification/
+├── bussines.bnf
+├── start.bus
+├── erp.application.bus
+├── erp.application.settings
+├── vendas/
+│   └── vendas.domain.bus
+├── cliente/
+│   ├── cliente.concept.bus
+│   ├── cliente.ativarConta.service.bus
+│   └── clientes.ui.bus
+├── common.types.bus
+```
+
+---
+
+**Bussines Lang** by Agility Soluções 🚀
