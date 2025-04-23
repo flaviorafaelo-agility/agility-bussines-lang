@@ -1,0 +1,198 @@
+
+Summary:
+O bloco service define uma operação de negócio exposta ou reutilizável pela aplicação.
+Cada serviço possui dados de entrada (input) e saída (output), e uma lógica de execução declarada no bloco implementation.
+
+- A entrada (input) e saída (output) seguem a mesma semântica dos campos em concept.
+- Pode-se usar input[] ou output[] para indicar listas de objetos.
+- A lógica é implementada diretamente em implementation, com variáveis, if, for, get, set, query, entre outros.
+
+BNF:
+<service> ::= <input-block> <output-block> <implementation-block>
+
+<input-block> ::= "input" <newline> <field-list>
+                | "input[]" <newline> <field-list>
+
+<output-block> ::= "output" <newline> <field-list>
+                 | "output[]" <newline> <field-list>
+
+<field-list> ::= <field> | <field> <newline> <field-list>
+
+<field> ::= <identifier> <whitespace> <type-name>
+            [<whitespace> <length>] 
+            [<whitespace> <pattern>] 
+            [<whitespace> <mask-or-format>] 
+            [<whitespace> <default>] 
+            [<whitespace> <caption>]
+
+<identifier> ::= <name> ["?"]
+<name> ::= <letter> { <letter> | <digit> | "_" }
+<type-name> ::= "string" | "int" | "float" | "bool" | "date" | "datetime" | <custom-type>
+
+<implementation-block> ::= "implementation" <whitespace>? "{" <newline> <instruction-list> "}"
+
+<instruction-list> ::= { <instruction> <newline> }
+
+<instruction> ::= <var-decl> | <assignment> | <if-block> | <for-block> | <get> | <set> | <del> | <query> | <return>
+
+<var-decl> ::= "var" <identifier> [": " <type-name>] ["=" <expression>]
+<assignment> ::= <identifier> "=" <expression>
+<if-block> ::= "if" "(" <expression> ")" "{" <instruction-list> "}" ["else" "{" <instruction-list> "}"]
+<for-block> ::= "for" <identifier> "in" <expression> "{" <instruction-list> "}"]
+<get> ::= "get" <concept> "where" <expression>
+<set> ::= "set" <concept> <assignment-list> "where" <expression>
+<del> ::= "del" <concept> "where" <expression>
+<query> ::= "query" <concept> <field-list-inline>? "where" <expression>
+<return> ::= "return" <expression>?
+
+<assignment-list> ::= <assignment> { "," <assignment> }
+<expression> ::= expressão matemática, lógica, concatenação, função etc.
+
+<newline> ::= "\n" | "\r\n"
+<whitespace> ::= " " | "\t"
+<letter> ::= "a" ... "z" | "A" ... "Z"
+<digit> ::= "0" ... "9"
+
+Explicações:
+- input / output podem ser campos simples ou uma estrutura (com múltiplos campos).
+- input[] / output[] indicam listas de entrada ou saída.
+- implementation define o comportamento com instruções semelhantes a linguagens tradicionais.
+- Suporte nativo a if, for, get, set, del, query, return, etc.
+- Campos seguem mesma regra de concept: tipos, máscara, nullable, etc.
+
+Exemplo 1 - Lista simples:
+
+input
+  uf string
+
+output[]
+  id string
+  nome string
+  email string
+
+implementation {
+  var resultado = query cliente id, nome, email where estado = uf
+  return resultado
+}
+
+Exemplo 2 - Entrada como array + lógica:
+
+input[]
+  produtoId string
+  quantidade int
+
+output[]
+  produtoId string
+  disponivel bool
+  mensagem string
+
+implementation {
+  var resposta = []
+
+  for item in input {
+    var estoque = get produto where id = item.produtoId
+    var ok = estoque.disponivel >= item.quantidade
+
+    resposta += {
+      produtoId: item.produtoId,
+      disponivel: ok,
+      mensagem: ok ? "Disponível" : "Estoque insuficiente"
+    }
+  }
+
+  return resposta
+}
+
+Exemplo 3 - Entrada como array + lógica:
+
+input
+  clienteId string
+
+output
+  status string
+  mensagem string
+
+implementation {
+  var cliente = get cliente where id = clienteId
+
+  if (cliente.ativo == false) {
+    cliente.ativo = true
+    set cliente ativo = true where id = clienteId
+
+    status = "ok"
+    mensagem = "Conta ativada com sucesso"
+  } else {
+    status = "ignorado"
+    mensagem = "Cliente já estava ativo"
+  }
+}
+
+Exemplo 4
+
+output
+  status string
+  clienteId string
+
+implementation {
+  var cliente: cliente = {
+    nome = "Flávio"
+    email = "flavio@exemplo.com"
+    cpf = "12345678900"
+    ativo = true
+  }
+
+  set cliente
+
+  clienteId = cliente.id
+  status = "ok"
+}
+
+Exemplo 5
+
+output
+  status string
+  total int
+
+implementation {
+  produtos := {
+    nome string
+    preco float
+    estoque int
+  }[] = [
+    {
+      nome = "Notebook"
+      preco = 4200.00
+      estoque = 10
+    },
+    {
+      nome = "Mouse Gamer"
+      preco = 150.50
+      estoque = 30
+    }
+  ]
+
+  // Adiciona um novo produto
+  produtos += {
+    nome = "Teclado Mecânico"
+    preco = 320.00
+    estoque = 25
+  }
+
+  // Atualiza produto pelo nome
+  produtos ~= p.nome == "Notebook" {
+    preco = 3500
+    estoque = 15
+  }
+
+  // Remove item da lista
+  produtos -= p => p.nome == "Teclado Mecânico"
+
+  // Conta os itens restantes
+  total := 0
+  for p in produtos {
+    total += 1
+  }
+
+  status = "ok"
+}
+

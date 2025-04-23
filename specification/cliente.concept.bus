@@ -1,0 +1,169 @@
+Summary:
+O concept define a estrutura e o comportamento implícito de uma entidade de negócio, sem precisar declarar CRUD, validações ou operações manualmente.
+
+Ao declarar um concept, a linguagem infere automaticamente:
+- persistência,
+- endpoints REST (ou outros protocolos),
+- estrutura de dados,
+- integração com tipos personalizados (definidos em *.types.bus),
+- e suporte nativo à IA.
+
+Campos definidos em concepts podem usar a mesma semântica de um type, mesmo que não estejam formalmente declarados em arquivos .types.bus.
+
+Campos podem ter:
+- tipos primitivos ou personalizados
+- tamanho fixo
+- regex de validação
+- máscara de entrada
+- valor padrão
+- descrição
+- ser opcionais com `?`
+- ser arrays com `[]`
+- ser campos derivados (calculados) com `:=`
+- suportar projeções com funções como `sum(...)`, `count(...)` etc.
+
+Tipos primitivos:
+
+string  
+Representa texto simples. Letras, números, símbolos.  
+Ex: Nome string
+
+int  
+Número inteiro.  
+Ex: Idade int
+
+float  
+Número com casas decimais.  
+Ex: Preco float
+
+bool  
+Valor verdadeiro ou falso.  
+Ex: Ativo bool
+
+date  
+Data no formato YYYY-MM-DD.  
+Ex: DataNascimento date
+
+datetime  
+Data e hora no formato YYYY-MM-DD HH:mm:ss.  
+Ex: CriadoEm datetime
+
+BNF:
+
+<concept> ::= <field-list>
+
+<field-list> ::= <field> | <field> <newline> <field-list>
+
+<field> ::= <identifier> <whitespace> <type-name> 
+            [<whitespace> <length>] 
+            [<whitespace> <pattern>] 
+            [<whitespace> <mask-or-format>] 
+            [<whitespace> <default>] 
+            [<whitespace> <caption>]
+          | <identifier> ":=" "(" <expression> ")" [<whitespace> <caption>]
+          | <identifier> ":=" <projection> [<whitespace> <caption>]
+
+<identifier> ::= <name> ["?"]
+
+<name> ::= <letter> { <letter> | <digit> | "_" }
+
+<type-name> ::= <base-type> [ "[]" ]
+
+<base-type> ::= "string" | "int" | "float" | "bool" | "date" | "datetime" | <custom-type>
+
+<custom-type> ::= <identifier>  ; Referência a um tipo definido em *.types.bus
+
+<length> ::= <digit>+
+
+<pattern> ::= <regex>           ; Ex: \d{11}, ^[A-Z]+$
+
+<mask-or-format> ::= <text>     ; Ex: 999.999.999-99, (99) 99999-9999
+
+<default> ::= "=" <value>
+
+<caption> ::= "\"" <text> "\""
+
+<projection> ::= <projection-name> "(" <expression> ")"
+
+<projection-name> ::= "sum" | "avg" | "count" | "min" | "max"
+
+<expression> ::= <expr-text>    ; expressão matemática usando campos conhecidos
+
+<whitespace> ::= " " | "\t"
+
+<newline> ::= "\n" | "\r\n"
+
+<letter> ::= "a" | ... | "z" | "A" | ... | "Z"
+
+<digit> ::= "0" | ... | "9"
+
+<value> ::= <text> ou <number> ou "true" ou "false" ou string entre aspas
+
+Explicações:
+
+<concept>: conteúdo completo do arquivo .concept.bus
+
+<field-list>: lista de campos definidos (um por linha)
+
+<field>: campo com nome, tipo e atributos opcionais ou campo calculado/derivado
+
+<identifier>: nome do campo, podendo terminar com `?` para nullable
+
+<type-name>: tipo do campo, podendo ser array (ex: string[], int[], endereco[])
+
+<custom-type>: tipo reutilizável definido em *.types.bus
+
+<length>: tamanho fixo de string
+
+<pattern>: expressão regular para validação
+
+<mask-or-format>: máscara visual (para entrada e exibição)
+
+<default>: valor padrão atribuído quando omitido
+
+<caption>: descrição amigável para label, tooltip, docs, IA
+
+<expression>: expressão aritmética entre campos (campo derivado)
+
+<projection>: cálculo aplicado sobre campo(s) de array (ex: sum(itens.total))
+
+Exemplo de uso:
+
+Titulo string 100 "Título do conteúdo"
+CPF cpf
+Email? string 50 \S+@\S+\.\S+ "E-mail do cliente"
+Telefones? string[] 14 \(\d{2}\)\d{5}-\d{4} "Lista de telefones"
+Endereco endereco
+DataCadastro datetime
+Ativo? bool =true "Está ativo?"
+
+// Campo calculado (linha)
+Total := (Preco * Quantidade - Desconto) "Total do item"
+
+// Campo com projeção (agregação)
+Itens ItemPedido[] "Itens do pedido"
+TotalGeral := sum(Itens.Total) "Total geral do pedido"
+QtdItens := count(Itens) "Quantidade de linhas"
+
+Regras para o compilador/VM:
+
+- Ao processar um arquivo .concept.bus, a engine:
+  - Sobe na árvore de diretórios até encontrar o *.domain.bus.
+  - Carrega as configurações globais do módulo.
+  - Aplica as regras do módulo a todos os concepts daquele diretório (e subdiretórios, se configurado).
+
+- Erro se não encontrar um módulo:
+  Ex: Módulo não definido para concept "cliente.concept.bus". Adicione um arquivo .domain.bus no diretório.
+
+- Validação cruzada:
+  O database definido no módulo pode restringir certas operações suportadas pelos concepts.
+
+Benefícios:
+- Zero repetição — o concept não precisa saber do module.
+- Organização natural por pasta.
+- Escalável: cada time pode trabalhar em seu módulo isoladamente.
+- Facilita geração automática de pacotes/API por domínio.
+
+Possibilidades futuras:
+- Suporte a múltiplos módulos com configuração central (ex: monorepo).
+- Importação de tipos entre módulos.

@@ -1,0 +1,159 @@
+Summary:
+O type define tipos reutilizáveis com semântica própria, podendo ser simples (como cpf string) ou complexos (como endereco com campos aninhados). 
+Ele permite encapsular regras de negócio e estrutura, garantindo reuso e manutenção centralizada. Tipos definidos aqui podem ser utilizados em concepts.
+
+Tipos primitivos:
+
+Os tipos primitivos são os blocos fundamentais da linguagem. Eles representam dados básicos e são amplamente usados em concepts e types.
+
+string
+Representa um texto simples. Pode conter letras, números, símbolos e espaços.
+Ex: Nome string
+
+int
+Representa um número inteiro, positivo ou negativo.
+Ex: Idade int
+
+float
+Representa um número com casas decimais (ponto flutuante).
+Ex: Preco float
+
+bool
+Representa um valor booleano: true ou false.
+Ex: Ativo bool
+
+date
+Representa uma data no formato YYYY-MM-DD.
+Ex: DataNascimento date
+
+datetime
+Representa uma data com hora no formato YYYY-MM-DD HH:mm:ss.
+Ex: CriadoEm datetime
+
+Convenções importantes:
+- Tipos sempre em minúsculo (string, int, date).
+- Tipos definidos em *.types.bus podem ser referenciados livremente nos concepts.
+- A ideia é estender o domínio de forma semântica, ex: cpf não é só uma string — tem validação e formato.
+- Tipos podem ser definidos como array com `[]`, ex: string[], int[], endereco[]
+- Campos opcionais (nullable) devem terminar com `?`, ex: email?, ativo?, enderecos?
+
+Tipos futuros:
+
+Estes tipos ainda não são obrigatórios na primeira versão da linguagem, mas estão planejados para ampliar o poder expressivo e semântico da Bussines Lang.
+
+enum
+Representa uma lista fixa de valores possíveis.
+Ideal para status, categorias, níveis, etc.
+Ex: Status enum { Ativo, Inativo, Pendente }
+
+list<T>
+Representa uma lista de elementos do tipo T.
+Usado para coleções como itens, telefones, endereços.
+Ex: Telefones list<telefone>
+
+map<K, V>
+Representa uma estrutura de chave-valor.
+Útil para armazenar dados flexíveis ou pares dinâmicos.
+Ex: CamposPersonalizados map<string, string>
+
+file
+Representa um arquivo carregado ou armazenado.
+Pode incluir imagem, PDF, XML, etc.
+Ex: Contrato file
+
+image
+Representa uma imagem, com possível preview ou manipulação.
+Ex: FotoPerfil image
+
+money
+Representa um valor monetário com precisão adequada para cálculos financeiros.
+Ex: TotalPedido money
+
+ref<T>
+Representa uma referência a outro concept, criando relacionamento entre entidades.
+Ex: Cliente ref<cliente>
+
+BNF:
+
+<type> ::= <field-list>
+
+<field-list> ::= <field> | <field> <newline> <field-list>
+
+<field> ::= <identifier> <whitespace> <type-name> 
+            [<whitespace> <length>] 
+            [<whitespace> <pattern>] 
+            [<whitespace> <mask-or-format>] 
+            [<whitespace> <default>] 
+            [<whitespace> <caption>]
+
+<complex-type> ::= <identifier> <newline> <indent> <field-list>
+
+<identifier> ::= <name> ["?"]
+
+<name> ::= <letter> { <letter> | <digit> | "_" }
+
+<type-name> ::= <base-type> [ "[]" ]
+
+<base-type> ::= "string" | "int" | "float" | "bool" | "date" | "datetime" | <custom-type>
+
+<custom-type> ::= <identifier>
+
+<mask-or-format> ::= <text>    ; Detectado por estrutura visual (formato ou máscara)
+
+<default> ::= "=" <value>      ; Valor padrão (string, número, boolean, data)
+
+<caption> ::= "\"" <text> "\""
+
+<whitespace> ::= " " | "\t"
+
+<newline> ::= "\n" | "\r\n"
+
+<indent> ::= <whitespace>+
+
+<letter> ::= "a" | ... | "z" | "A" | ... | "Z"
+
+<digit> ::= "0" | ... | "9"
+
+<value> ::= <text> ou <number> ou "true" ou "false" ou string entre aspas
+
+Explicações:
+
+<type>: conteúdo completo do arquivo .types.bus
+
+<field-list>: lista de tipos definidos (um por linha ou bloco)
+
+<field>: define um tipo simples (cpf string) ou inicia um tipo complexo (endereco)
+
+<complex-type>: tipo que possui subcampos (indentados)
+
+<identifier>: nome do campo, podendo terminar com `?` para indicar que é nullable
+
+<type-name>: tipo base, podendo ser array (ex: string[], int[], endereco[])
+
+<custom-type>: referência a outro tipo definido no mesmo ou outro arquivo
+
+<length>: usado apenas com string, indica o tamanho fixo
+
+<pattern>: regex de validação (ex: \d{11})
+
+<mask-or-format>: formato visual (ex: 999.999.999-99, dd/MM/yyyy)
+
+<default>: valor atribuído quando o campo for omitido
+
+<caption>: descrição amigável exibida como tooltip, label ou ajuda
+
+Exemplo:
+
+cpf string 11 \d{11} 999.999.999-99 "Cadastro de Pessoa Física"
+email? string 50 \S+@\S+\.\S+ "E-mail do cliente"
+ativo? bool "Está ativo?" =true
+dataNascimento? date "Nascimento"
+emails? string[] 50 \S+@\S+\.\S+ "Lista de e-mails"
+
+endereco
+  rua string "Nome da rua"
+  numero int "Número da casa"
+  cep string 8 \d{8} "CEP"
+  cidade string "Cidade"
+
+enderecos? endereco[] "Lista de endereços"

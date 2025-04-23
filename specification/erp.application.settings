@@ -1,0 +1,8 @@
+{
+  "name": "ERP Comercial",
+  "database": "/data/erp.sqlite",
+  "user": "admin",
+  "password": "1234",
+  "logLevel": "info",
+  "enableSwagger": true
+}

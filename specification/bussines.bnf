@@ -1,0 +1,64 @@
+Start              ::= 'applications' Newline AppList
+AppList            ::= App | App Newline AppList
+App                ::= Identifier Newline Indent 'path' Whitespace Path
+                       Newline Indent 'port' Whitespace Number
+                       AppExtras
+
+AppExtras          ::= ε
+                     | Newline Indent 'https' Whitespace Bool AppExtras
+                     | Newline Indent 'certPath' Whitespace Path AppExtras
+                     | Newline Indent 'keyPath' Whitespace Path AppExtras
+
+Concept            ::= FieldList
+FieldList          ::= Field | Field Newline FieldList
+
+Field              ::= Identifier Whitespace TypeName FieldOptions
+                    | Identifier ':=' '(' Expression ')' CaptionOpt
+                    | Identifier ':=' FunctionCall CaptionOpt
+
+FieldOptions       ::= LengthOpt PatternOpt MaskOpt DefaultOpt CaptionOpt
+
+LengthOpt          ::= ε | Whitespace Length
+PatternOpt         ::= ε | Whitespace Pattern
+MaskOpt            ::= ε | Whitespace MaskOrFormat
+DefaultOpt         ::= ε | Whitespace Default
+CaptionOpt         ::= ε | Whitespace Caption
+
+TypeName           ::= BaseType ArrayOpt
+ArrayOpt           ::= ε | '[]'
+
+BaseType           ::= 'string' | 'int' | 'float' | 'bool' | 'date' | 'datetime' | CustomType
+CustomType         ::= Identifier
+
+Identifier         ::= Name NullableOpt
+NullableOpt        ::= ε | '?'
+
+Name               ::= Letter NameTail
+NameTail           ::= ε | NameTailChar NameTail
+NameTailChar       ::= Letter | Digit | '_'
+
+Length             ::= Digit DigitTail
+DigitTail          ::= ε | Digit DigitTail
+
+FunctionCall       ::= FunctionName '(' Expression ')'
+FunctionName       ::= 'sum' | 'avg' | 'count' | 'min' | 'max'
+
+Caption            ::= '"' Text '"'
+Expression         ::= Text
+Default            ::= '=' Value
+
+Whitespace         ::= ' ' | '\t'
+Newline            ::= '\n' | '\r\n'
+Indent             ::= Whitespace WhitespaceOpt
+WhitespaceOpt      ::= ε | WhitespaceOpt Whitespace
+
+Letter             ::= 'a' | ... | 'z' | 'A' | ... | 'Z'
+Digit              ::= '0' | ... | '9'
+
+Text               ::= '"' TextBody '"'
+TextBody           ::= ε | TextChar TextBody
+TextChar           ::= AnyCharacterExceptQuote
+
+Bool               ::= 'true' | 'false'
+Value              ::= Text | Number | Bool
+Path               ::= Text

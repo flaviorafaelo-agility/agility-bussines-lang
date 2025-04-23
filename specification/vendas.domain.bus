@@ -1,0 +1,39 @@
+Summary:
+O module representa o agrupador lógico de vários concepts, e define metadados comuns a eles, como o tipo de banco de dados, descrição do domínio, e outras configurações globais.
+
+Cada módulo corresponde a um domínio funcional ou técnico do sistema (ex: vendas, cadastro, estoque).
+
+Campos suportados:
+Campo | Obrigatório | Descrição
+module | ✅ | Nome do módulo
+description | opcional | Descrição curta sobre o objetivo do módulo
+database | opcional | Tipo de banco suportado pelos concepts vinculados (ex: sqlite, postgresql, sqlserver, mysql)
+date-format dd/MM/yyyy
+currency-symbol R$
+
+bnf:
+<module-def> ::= "module" <whitespace> <identifier> <newline> <module-body>
+
+<module-body> ::= <module-line> | <module-line> <newline> <module-body>
+
+<module-line> ::= "description" <whitespace> <text>
+                | "database" <whitespace> <db-type>
+
+<db-type> ::= "sqlite" | "postgresql" | "sqlserver" | "mysql"
+
+<identifier> ::= <letter> { <letter> | <digit> | "_" }
+
+<text> ::= { qualquer caractere visível }
+
+<whitespace> ::= " " | "\t"
+
+<newline> ::= "\n" | "\r\n"
+
+<letter> ::= "a" | ... | "z" | "A" | ... | "Z"
+
+<digit> ::= "0" | ... | "9"
+
+Regras de uso:
+O nome do módulo é usado como namespace para os concepts.
+O database define a base para gerar código SQL ou ORMs.
+Pode haver validações para garantir que todos os concepts do módulo estejam compatíveis com o banco especificado.

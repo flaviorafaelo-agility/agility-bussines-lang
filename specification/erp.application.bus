@@ -1,0 +1,59 @@
+Summary:
+A application representa o sistema completo, agrupando múltiplos módulos (*.domain.bus). Define configurações globais como nome da aplicação, versão, autor, e até regras globais de compilação ou geração de artefatos.
+
+application (ERP)
+src/
+├── erp.application.bus
+├── vendas/
+│   ├── vendas.domain.bus
+│   ├── pedido.concept.bus
+│   └── cliente.concept.bus
+└── cadastro/
+    ├── cadastro.domain.bus
+    ├── usuario.concept.bus
+    └── perfil.concept.bus
+
+
+
+ BNF:
+ <application-def> ::= "application" <whitespace> <identifier> <newline> <application-body>
+
+<application-body> ::= <application-line> | <application-line> <newline> <application-body>
+
+<application-line> ::= "version" <whitespace> <text>
+                     | "description" <whitespace> <text>
+                     | "author" <whitespace> <text>
+                     | "default-database" <whitespace> <db-type>
+
+<db-type> ::= "sqlite" | "postgresql" | "sqlserver" | "mysql"
+
+<identifier> ::= <letter> { <letter> | <digit> | "_" }
+
+<text> ::= { qualquer caractere visível }
+
+<whitespace> ::= " " | "\t"
+
+<newline> ::= "\n" | "\r\n"
+   
+
+Exemplo de conteúdo:
+Campo | Obrigatório | Descrição
+application | ✅ | Nome da aplicação
+version | opcional | Versão atual
+description | opcional | Descrição da aplicação
+author | opcional | Nome do criador/desenvolvedor
+default-database | opcional | Define o banco padrão, caso não seja definido em cada módulo
+
+Exemplo de conteúdo:
+application ERP
+version 1.0.0
+description "Sistema integrado de gestão empresarial"
+author "Agility Soluções"
+default-database postgresql
+date-format dd/MM/yyyy
+currency-symbol R$
+
+ Regras de associação
+O compilador começa pelo arquivo .application.bus e varre recursivamente os diretórios.
+Todos os arquivos .domain.bus localizados abaixo dessa pasta pertencem à aplicação.
+Cada .domain.bus continua agrupando seus próprios concepts, e herda configurações globais se não definidas localmente.

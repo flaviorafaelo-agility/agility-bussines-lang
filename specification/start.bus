@@ -1,0 +1,123 @@
+Summary:
+O arquivo `start.bus` define o ponto de entrada da VM da Bussines Lang, listando as aplicações que devem ser iniciadas, as portas a serem utilizadas e configurações opcionais como HTTPS e certificados. Ele é centralizado e fica fora da estrutura dos módulos.
+
+Esse arquivo permite executar múltiplas aplicações simultaneamente e configurar cada uma com diferentes portas, caminhos e opções de segurança.
+
+Estrutura geral:
+- Cada aplicação é identificada por um nome (ex: app1, app2)
+- O conteúdo de cada bloco especifica:
+  - o caminho completo para o arquivo `*.application.bus`
+  - a porta a ser usada para expor a aplicação
+  - se HTTPS deve ser ativado
+  - caminhos para o certificado e a chave, se necessário
+
+BNF:
+
+<start> ::= "applications" <newline> { <app-block> }
+
+<app-block> ::= <identifier> <newline> <indent> <app-config>
+
+<app-config> ::= 
+    "path" <whitespace> <path>
+  | "port" <whitespace> <port-number>
+  | "https" <whitespace> ("true" | "false")
+  | "certPath" <whitespace> <file-path>
+  | "keyPath" <whitespace> <file-path>
+  | <newline> <indent> <app-config>
+
+<path> ::= <identifier> "." { <identifier> "." } <identifier>
+
+<port-number> ::= <digit>+
+
+<file-path> ::= <text>
+
+<identifier> ::= <letter> { <letter> | <digit> | "_" }
+
+<whitespace> ::= " " | "\t"
+<indent> ::= <whitespace>+
+<newline> ::= "\n" | "\r\n"
+<letter> ::= "a" | ... | "z" | "A" | ... | "Z"
+<digit> ::= "0" | ... | "9"
+<text> ::= qualquer sequência de caracteres (sem aspas)
+
+Explicações:
+
+<start>: conteúdo completo do arquivo `start.bus`
+
+<app-block>: define uma aplicação que será iniciada pela VM
+
+<path>: caminho completo para o arquivo `*.application.bus`
+
+<port>: número da porta TCP usada pela aplicação
+
+<https>: ativa HTTPS (se `true`, `certPath` e `keyPath` devem ser definidos)
+
+<certPath>, <keyPath>: caminhos absolutos ou relativos para os arquivos do certificado SSL
+
+Exemplo de uso:
+
+applications
+  erp
+    path sistema.erp.application.bus
+    port 8080
+    https false
+
+  fiscal
+    path sistema.fiscal.application.bus
+    port 8443
+    https true
+    certPath /certs/fiscal.crt
+    keyPath /certs/fiscal.key
+
+Comportamento da VM:
+
+- Para cada item em `applications`, a VM:
+  - carrega a aplicação do caminho indicado
+  - inicia um servidor HTTP(S) na porta informada
+  - registra as APIs baseadas nos `concepts` encontrados
+  - aplica as configurações indicadas no settings da aplicação (ex: database)
+
+Benefícios:
+- Início centralizado de múltiplas aplicações
+- Configuração declarativa por arquivo
+- Suporte nativo a HTTPS e certificados
+- Organização limpa e fora dos módulos da aplicação
+- Pronto para ambientes multiapp e balanceamento
+
+Possibilidades futuras:
+- Configuração de domínio externo (hostnames)
+- Estratégias de autenticação globais
+- Registro em serviço de discovery
+
+
+application (ERP)
+
+start.bus                        ← Arquivo de inicialização global da VM
+
+sistema/                         ← Raiz das aplicações e módulos
+├── erp/
+│   ├── erp.application.bus                ← Define a aplicação ERP
+│   ├── erp.application.settings           ← Configurações da aplicação ERP (JSON)
+│   ├── types/
+│   │   └── common.types.bus               ← Tipos reutilizáveis
+│   ├── vendas/
+│   │   ├── vendas.domain.bus              ← Define o módulo Vendas
+│   │   ├── vendas.domain.settings         ← Configurações do módulo Vendas
+│   │   ├── pedidos/
+│   │   │   └── pedido.concept.bus
+│   │   └── clientes/
+│   │       └── cliente.concept.bus
+│   ├── financeiro/
+│   │   ├── financeiro.domain.bus          ← Define o módulo Financeiro
+│   │   ├── financeiro.domain.settings     ← Configurações do módulo Financeiro
+│   │   ├── contas-pagar/
+│   │   │   └── conta.concept.bus
+│   │   └── pagamentos/
+│   │       └── pagamento.concept.bus
+│   └── ecommerce/
+│       ├── ecommerce.domain.bus           ← Define o módulo Ecommerce
+│       ├── ecommerce.domain.settings      ← Configurações do módulo Ecommerce
+│       ├── produtos/
+│       │   └── produto.concept.bus
+│       └── carrinhos/
+│           └── carrinho.concept.bus
