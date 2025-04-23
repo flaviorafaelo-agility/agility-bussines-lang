@@ -1,78 +1,75 @@
-# 🧠 Bussines Lang
+# Bussines Lang
 
-**Bussines Lang** é uma linguagem de domínio específica (DSL) desenvolvida pela **Agility Soluções**, voltada para sistemas de negócio com foco em **agilidade, clareza e performance**.
+**Bussines Lang** é uma linguagem de programação declarativa e semântica desenvolvida pela Agility Soluções, projetada para agilidade no desenvolvimento de sistemas empresariais com forte integração nativa a IA, CRUD implícito e performance de execução via máquina virtual.
 
-A proposta da linguagem é **eliminar a verbosidade** do desenvolvimento tradicional, permitindo que conceitos de negócio, serviços, estrutura de dados e comportamento sejam definidos de forma **objetiva e sem repetição**.
-
----
-
-## 🚀 Objetivos
-
-- Reduzir o esforço de codificação em sistemas de negócio
-- Evitar duplicação entre modelo, API e lógica
-- Permitir escrita declarativa com semântica específica de negócio
-- Facilitar automações e integração nativa com inteligência artificial
-- Executar via **máquina virtual própria com suporte a bytecode**
+## 🌟 Objetivos
+- Reduzir a verbosidade do código
+- Declarar regras e estrutura com semântica empresarial
+- Suportar geração de APIs REST, documentação e interfaces automaticamente
+- Oferecer integração com VM baseada em bytecode, com execução performática
+- Permitir expressividade com recursos como `if`, `for`, `sum`, `get`, `set`, entre outros
 
 ---
 
-## 📦 Estrutura do Projeto
+## 📁 Estrutura de Arquivos e Diretórios
 
-```
-specification/
-├── start.bus                   # Arquivo que define as aplicações que devem ser iniciadas
-├── erp.application.bus        # Define a aplicação ERP e seus módulos
-├── erp.application.settings   # Configurações específicas da aplicação
-├── vendas/
-│   ├── vendas.domain.bus      # Define o domínio e o banco de dados
-│   ├── cliente.concept.bus    # Representa o conceito de Cliente
-│   ├── cliente.ativarConta.service.bus  # Serviço: ativar conta do cliente
-│   └── clientes.ui.bus        # Interface declarativa para o concept cliente
-├── common.types.bus           # Tipos reutilizáveis: cpf, telefone, endereço, etc.
-└── bussines.bnf               # Definição da gramática formal da linguagem
-```
+| Arquivo                                 | Descrição |
+|----------------------------------------|-----------|
+| `start.bus`                             | Define quais aplicações devem ser inicializadas pela VM, suas portas e opções de HTTPS. |
+| `erp.application.bus`                  | Define os módulos que pertencem a uma aplicação, como `vendas`, `cadastro`, etc. |
+| `erp.application.settings`             | Contém configurações específicas da aplicação, como o caminho da base de dados. |
+| `vendas.domain.bus`                    | Declara o banco de dados utilizado pelo módulo `vendas`, bem como suas configurações. |
+| `cliente.concept.bus`                  | Define a estrutura da entidade `cliente`, com seus campos, validações, tipos e regras. |
+| `common.types.bus`                     | Define tipos reutilizáveis como `cpf`, `endereco`, `telefone` com validações e máscaras. |
+| `cliente.ativarConta.service.bus`      | Define o serviço `ativarConta` com entrada, saída e a implementação em bloco de código. |
+| `clientes.ui.bus`                      | Representa o layout visual (UI) para o concept `cliente` — a ser interpretado pelo motor de renderização de UI. |
+| `bussines.bnf`                         | Arquivo com a gramática completa em formato BNF da linguagem Bussines Lang. |
 
 ---
 
-## 📘 Exemplos
+## 🛠️ Componentes principais
 
-### Concept:
+- **Concepts:** definem entidades com estrutura e comportamento implícito (CRUD, validação, integração).
+- **Types:** definem tipos reutilizáveis com semântica, máscaras, regex, etc.
+- **Domains:** agrupam concepts e definem configurações de persistência.
+- **Applications:** organizam os módulos de domínio.
+- **Services:** encapsulam lógica com input/output e bloco de `implementation {}`.
+- **UI:** descreve a visualização declarativa de um concept ou serviço.
+- **Start:** ponto inicial da aplicação, define as aplicações a serem iniciadas.
+
+---
+
+## 📦 Exemplo de Inicialização
+
+Arquivo `start.bus`:
+
 ```bus
-nome string 100 "Nome do cliente"
-cpf cpf
-ativo? bool =true "Está ativo?"
-```
+applications
+  erp
+    path sistema.erp.application.bus
+    port 8080
+    https false
 
-### Service:
-```bus
-input
-  clienteId string
-
-output
-  status string
-
-implementation {
-  cliente := get cliente where id = clienteId
-  cliente.ativo = true
-  set cliente
-
-  status = "ok"
-}
+  nfe
+    path sistema.nfe.application.bus
+    port 8443
+    https true
+    certPath /certs/nfe.crt
+    keyPath /certs/nfe.key
 ```
 
 ---
 
-## 🔮 Futuro
+## 🧠 Futuro
 
-- Suporte completo a compilação estática
-- Integração com ferramentas de IA
-- Geração automática de Swagger, documentação e testes
-- Interface visual autogerada a partir de `.ui.bus`
+- Geração de bytecode com serialização de lambdas
+- Execução performática via `call`
+- Debugger integrado para rastreio de execução
+- Integração com IA para geração de serviços e recomendações de campos
 
 ---
 
-## 🛠 Desenvolvido por
+## 🏢 Desenvolvido por
 
-**Agility Soluções**  
-📧 contato@agility.com.br  
-🌐 [www.agility.com.br](https://www.agility.com.br)
+Agility Soluções — Tecnologia com inteligência de negócio.
+
