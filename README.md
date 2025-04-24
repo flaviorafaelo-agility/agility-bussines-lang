@@ -1,7 +1,20 @@
+# Bussines Lang
 
+Este repositório contém uma implementação e exemplos da linguagem **Bussines Lang**, projetada para acelerar o desenvolvimento de aplicações empresariais com foco em agilidade, expressividade e integração com conceitos de negócios.
 
-# bussines.bnf
+---
 
+## 📘 Visão Geral
+
+A linguagem permite definir conceitos (concepts), serviços, tipos reutilizáveis, interfaces de usuário e configurações de aplicação, tudo com uma sintaxe própria e altamente declarativa.
+
+---
+
+## 📐 Gramática
+
+A gramática da linguagem está descrita no arquivo `bussines.bnf`:
+
+```
 Start              ::= 'applications' Newline AppList
 AppList            ::= App | App Newline AppList
 App                ::= Identifier Newline Indent 'path' Whitespace Path
@@ -67,9 +80,358 @@ Bool               ::= 'true' | 'false'
 Value              ::= Text | Number | Bool
 Path               ::= Text
 
+```
 
-# cliente.ativarConta.service.bus
+---
 
+## 📁 Estrutura de Arquivos
+
+### 📄 `common.types.bus`
+Define tipos reutilizáveis, como `cpf`, `email`, etc.
+
+```
+Summary:
+O type define tipos reutilizáveis com semântica própria, podendo ser simples (como cpf string) ou complexos (como endereco com campos aninhados). 
+Ele permite encapsular regras de negócio e estrutura, garantindo reuso e manutenção centralizada. Tipos definidos aqui podem ser utilizados em concepts.
+
+Tipos primitivos:
+
+Os tipos primitivos são os blocos fundamentais da linguagem. Eles representam dados básicos e são amplamente usados em concepts e types.
+
+string
+Representa um texto simples. Pode conter letras, números, símbolos e espaços.
+Ex: Nome string
+
+int
+Representa um número inteiro, positivo ou negativo.
+Ex: Idade int
+
+float
+Representa um número com casas decimais (ponto flutuante).
+Ex: Preco float
+
+bool
+Representa um valor booleano: true ou false.
+Ex: Ativo bool
+
+date
+Representa uma data no formato YYYY-MM-DD.
+Ex: DataNascimento date
+
+datetime
+Representa uma data com hora no formato YYYY-MM-DD HH:mm:ss.
+Ex: CriadoEm datetime
+
+Convenções importantes:
+- Tipos sempre em minúsculo (string, int, date).
+- Tipos definidos em *.types.bus podem ser referenciados livremente nos concepts.
+- A ideia é estender o domínio de forma semântica, ex: cpf não é só uma string — tem validação e formato.
+- Tipos podem ser definidos como array com `[]`, ex: string[], int[], endereco[]
+- Campos opcionais (nullable) devem terminar com `?`, ex: email?, ativo?, enderecos?
+
+Tipos futuros:
+
+Estes tipos ainda não são obrigatórios na primeira versão da linguagem, mas estão planejados para ampliar o poder expressivo e semântico da Bussines Lang.
+
+enum
+Representa uma lista fixa de valores possíveis.
+Ideal para status, categorias, níveis, etc.
+Ex: Status enum { Ativo, Inativo, Pendente }
+
+list<T>
+Representa uma lista de elementos do tipo T.
+Usado para coleções como itens, telefones, endereços.
+Ex: Telefones list<telefone>
+
+map<K, V>
+Representa uma estrutura de chave-valor.
+Útil para armazenar dados flexíveis ou pares dinâmicos.
+Ex: CamposPersonalizados map<string, string>
+
+file
+Representa um arquivo carregado ou armazenado.
+Pode incluir imagem, PDF, XML, etc.
+Ex: Contrato file
+
+image
+Representa uma imagem, com possível preview ou manipulação.
+Ex: FotoPerfil image
+
+money
+Representa um valor monetário com precisão adequada para cálculos financeiros.
+Ex: TotalPedido money
+
+ref<T>
+Representa uma referência a outro concept, criando relacionamento entre entidades.
+Ex: Cliente ref<cliente>
+
+BNF:
+
+<type> ::= <field-list>
+
+<field-list> ::= <field> | <field> <newline> <field-list>
+
+<field> ::= <identifier> <whitespace> <type-name> 
+            [<whitespace> <length>] 
+            [<whitespace> <pattern>] 
+            [<whitespace> <mask-or-format>] 
+            [<whitespace> <default>] 
+            [<whitespace> <caption>]
+
+<complex-type> ::= <identifier> <newline> <indent> <field-list>
+
+<identifier> ::= <name> ["?"]
+
+<name> ::= <letter> { <letter> | <digit> | "_" }
+
+<type-name> ::= <base-type> [ "[]" ]
+
+<base-type> ::= "string" | "int" | "float" | "bool" | "date" | "datetime" | <custom-type>
+
+<custom-type> ::= <identifier>
+
+<mask-or-format> ::= <text>    ; Detectado por estrutura visual (formato ou máscara)
+
+<default> ::= "=" <value>      ; Valor padrão (string, número, boolean, data)
+
+<caption> ::= "\"" <text> "\""
+
+<whitespace> ::= " " | "\t"
+
+<newline> ::= "\n" | "\r\n"
+
+<indent> ::= <whitespace>+
+
+<letter> ::= "a" | ... | "z" | "A" | ... | "Z"
+
+<digit> ::= "0" | ... | "9"
+
+<value> ::= <text> ou <number> ou "true" ou "false" ou string entre aspas
+
+Explicações:
+
+<type>: conteúdo completo do arquivo .types.bus
+
+<field-list>: lista de tipos definidos (um por linha ou bloco)
+
+<field>: define um tipo simples (cpf string) ou inicia um tipo complexo (endereco)
+
+<complex-type>: tipo que possui subcampos (indentados)
+
+<identifier>: nome do campo, podendo terminar com `?` para indicar que é nullable
+
+<type-name>: tipo base, podendo ser array (ex: string[], int[], endereco[])
+
+<custom-type>: referência a outro tipo definido no mesmo ou outro arquivo
+
+<length>: usado apenas com string, indica o tamanho fixo
+
+<pattern>: regex de validação (ex: \d{11})
+
+<mask-or-format>: formato visual (ex: 999.999.999-99, dd/MM/yyyy)
+
+<default>: valor atribuído quando o campo for omitido
+
+<caption>: descrição amigável exibida como tooltip, label ou ajuda
+
+Exemplo:
+
+cpf string 11 \d{11} 999.999.999-99 "Cadastro de Pessoa Física"
+email? string 50 \S+@\S+\.\S+ "E-mail do cliente"
+ativo? bool "Está ativo?" =true
+dataNascimento? date "Nascimento"
+emails? string[] 50 \S+@\S+\.\S+ "Lista de e-mails"
+
+endereco
+  rua string "Nome da rua"
+  numero int "Número da casa"
+  cep string 8 \d{8} "CEP"
+  cidade string "Cidade"
+
+enderecos? endereco[] "Lista de endereços"
+
+```
+
+### 📄 `cliente.concept.bus`
+Define o concept `cliente`, seus campos, tipos e validações.
+
+```
+Summary:
+O concept define a estrutura e o comportamento implícito de uma entidade de negócio, sem precisar declarar CRUD, validações ou operações manualmente.
+
+Ao declarar um concept, a linguagem infere automaticamente:
+- persistência,
+- endpoints REST (ou outros protocolos),
+- estrutura de dados,
+- integração com tipos personalizados (definidos em *.types.bus),
+- e suporte nativo à IA.
+
+Campos definidos em concepts podem usar a mesma semântica de um type, mesmo que não estejam formalmente declarados em arquivos .types.bus.
+
+Campos podem ter:
+- tipos primitivos ou personalizados
+- tamanho fixo
+- regex de validação
+- máscara de entrada
+- valor padrão
+- descrição
+- ser opcionais com `?`
+- ser arrays com `[]`
+- ser campos derivados (calculados) com `:=`
+- suportar projeções com funções como `sum(...)`, `count(...)` etc.
+
+Tipos primitivos:
+
+string  
+Representa texto simples. Letras, números, símbolos.  
+Ex: Nome string
+
+int  
+Número inteiro.  
+Ex: Idade int
+
+float  
+Número com casas decimais.  
+Ex: Preco float
+
+bool  
+Valor verdadeiro ou falso.  
+Ex: Ativo bool
+
+date  
+Data no formato YYYY-MM-DD.  
+Ex: DataNascimento date
+
+datetime  
+Data e hora no formato YYYY-MM-DD HH:mm:ss.  
+Ex: CriadoEm datetime
+
+BNF:
+
+<concept> ::= <field-list>
+
+<field-list> ::= <field> | <field> <newline> <field-list>
+
+<field> ::= <identifier> <whitespace> <type-name> 
+            [<whitespace> <length>] 
+            [<whitespace> <pattern>] 
+            [<whitespace> <mask-or-format>] 
+            [<whitespace> <default>] 
+            [<whitespace> <caption>]
+          | <identifier> ":=" "(" <expression> ")" [<whitespace> <caption>]
+          | <identifier> ":=" <projection> [<whitespace> <caption>]
+
+<identifier> ::= <name> ["?"]
+
+<name> ::= <letter> { <letter> | <digit> | "_" }
+
+<type-name> ::= <base-type> [ "[]" ]
+
+<base-type> ::= "string" | "int" | "float" | "bool" | "date" | "datetime" | <custom-type>
+
+<custom-type> ::= <identifier>  ; Referência a um tipo definido em *.types.bus
+
+<length> ::= <digit>+
+
+<pattern> ::= <regex>           ; Ex: \d{11}, ^[A-Z]+$
+
+<mask-or-format> ::= <text>     ; Ex: 999.999.999-99, (99) 99999-9999
+
+<default> ::= "=" <value>
+
+<caption> ::= "\"" <text> "\""
+
+<projection> ::= <projection-name> "(" <expression> ")"
+
+<projection-name> ::= "sum" | "avg" | "count" | "min" | "max"
+
+<expression> ::= <expr-text>    ; expressão matemática usando campos conhecidos
+
+<whitespace> ::= " " | "\t"
+
+<newline> ::= "\n" | "\r\n"
+
+<letter> ::= "a" | ... | "z" | "A" | ... | "Z"
+
+<digit> ::= "0" | ... | "9"
+
+<value> ::= <text> ou <number> ou "true" ou "false" ou string entre aspas
+
+Explicações:
+
+<concept>: conteúdo completo do arquivo .concept.bus
+
+<field-list>: lista de campos definidos (um por linha)
+
+<field>: campo com nome, tipo e atributos opcionais ou campo calculado/derivado
+
+<identifier>: nome do campo, podendo terminar com `?` para nullable
+
+<type-name>: tipo do campo, podendo ser array (ex: string[], int[], endereco[])
+
+<custom-type>: tipo reutilizável definido em *.types.bus
+
+<length>: tamanho fixo de string
+
+<pattern>: expressão regular para validação
+
+<mask-or-format>: máscara visual (para entrada e exibição)
+
+<default>: valor padrão atribuído quando omitido
+
+<caption>: descrição amigável para label, tooltip, docs, IA
+
+<expression>: expressão aritmética entre campos (campo derivado)
+
+<projection>: cálculo aplicado sobre campo(s) de array (ex: sum(itens.total))
+
+Exemplo de uso:
+
+Titulo string 100 "Título do conteúdo"
+CPF cpf
+Email? string 50 \S+@\S+\.\S+ "E-mail do cliente"
+Telefones? string[] 14 \(\d{2}\)\d{5}-\d{4} "Lista de telefones"
+Endereco endereco
+DataCadastro datetime
+Ativo? bool =true "Está ativo?"
+
+// Campo calculado (linha)
+Total := (Preco * Quantidade - Desconto) "Total do item"
+
+// Campo com projeção (agregação)
+Itens ItemPedido[] "Itens do pedido"
+TotalGeral := sum(Itens.Total) "Total geral do pedido"
+QtdItens := count(Itens) "Quantidade de linhas"
+
+Regras para o compilador/VM:
+
+- Ao processar um arquivo .concept.bus, a engine:
+  - Sobe na árvore de diretórios até encontrar o *.domain.bus.
+  - Carrega as configurações globais do módulo.
+  - Aplica as regras do módulo a todos os concepts daquele diretório (e subdiretórios, se configurado).
+
+- Erro se não encontrar um módulo:
+  Ex: Módulo não definido para concept "cliente.concept.bus". Adicione um arquivo .domain.bus no diretório.
+
+- Validação cruzada:
+  O database definido no módulo pode restringir certas operações suportadas pelos concepts.
+
+Benefícios:
+- Zero repetição — o concept não precisa saber do module.
+- Organização natural por pasta.
+- Escalável: cada time pode trabalhar em seu módulo isoladamente.
+- Facilita geração automática de pacotes/API por domínio.
+
+Possibilidades futuras:
+- Suporte a múltiplos módulos com configuração central (ex: monorepo).
+- Importação de tipos entre módulos.
+
+```
+
+### 📄 `cliente.ativarConta.service.bus`
+Define um serviço relacionado ao concept `cliente`, com input/output e implementação.
+
+```
 
 Summary:
 O bloco service define uma operação de negócio exposta ou reutilizável pela aplicação.
@@ -269,349 +631,64 @@ implementation {
 }
 
 
+```
 
-# cliente.concept.bus
+### 📄 `clientes.ui.bus`
+Define a interface visual associada ao concept `cliente`.
 
-Summary:
-O concept define a estrutura e o comportamento implícito de uma entidade de negócio, sem precisar declarar CRUD, validações ou operações manualmente.
-
-Ao declarar um concept, a linguagem infere automaticamente:
-- persistência,
-- endpoints REST (ou outros protocolos),
-- estrutura de dados,
-- integração com tipos personalizados (definidos em *.types.bus),
-- e suporte nativo à IA.
-
-Campos definidos em concepts podem usar a mesma semântica de um type, mesmo que não estejam formalmente declarados em arquivos .types.bus.
-
-Campos podem ter:
-- tipos primitivos ou personalizados
-- tamanho fixo
-- regex de validação
-- máscara de entrada
-- valor padrão
-- descrição
-- ser opcionais com `?`
-- ser arrays com `[]`
-- ser campos derivados (calculados) com `:=`
-- suportar projeções com funções como `sum(...)`, `count(...)` etc.
-
-Tipos primitivos:
-
-string  
-Representa texto simples. Letras, números, símbolos.  
-Ex: Nome string
-
-int  
-Número inteiro.  
-Ex: Idade int
-
-float  
-Número com casas decimais.  
-Ex: Preco float
-
-bool  
-Valor verdadeiro ou falso.  
-Ex: Ativo bool
-
-date  
-Data no formato YYYY-MM-DD.  
-Ex: DataNascimento date
-
-datetime  
-Data e hora no formato YYYY-MM-DD HH:mm:ss.  
-Ex: CriadoEm datetime
-
-BNF:
-
-<concept> ::= <field-list>
-
-<field-list> ::= <field> | <field> <newline> <field-list>
-
-<field> ::= <identifier> <whitespace> <type-name> 
-            [<whitespace> <length>] 
-            [<whitespace> <pattern>] 
-            [<whitespace> <mask-or-format>] 
-            [<whitespace> <default>] 
-            [<whitespace> <caption>]
-          | <identifier> ":=" "(" <expression> ")" [<whitespace> <caption>]
-          | <identifier> ":=" <projection> [<whitespace> <caption>]
-
-<identifier> ::= <name> ["?"]
-
-<name> ::= <letter> { <letter> | <digit> | "_" }
-
-<type-name> ::= <base-type> [ "[]" ]
-
-<base-type> ::= "string" | "int" | "float" | "bool" | "date" | "datetime" | <custom-type>
-
-<custom-type> ::= <identifier>  ; Referência a um tipo definido em *.types.bus
-
-<length> ::= <digit>+
-
-<pattern> ::= <regex>           ; Ex: \d{11}, ^[A-Z]+$
-
-<mask-or-format> ::= <text>     ; Ex: 999.999.999-99, (99) 99999-9999
-
-<default> ::= "=" <value>
-
-<caption> ::= "\"" <text> "\""
-
-<projection> ::= <projection-name> "(" <expression> ")"
-
-<projection-name> ::= "sum" | "avg" | "count" | "min" | "max"
-
-<expression> ::= <expr-text>    ; expressão matemática usando campos conhecidos
-
-<whitespace> ::= " " | "\t"
-
-<newline> ::= "\n" | "\r\n"
-
-<letter> ::= "a" | ... | "z" | "A" | ... | "Z"
-
-<digit> ::= "0" | ... | "9"
-
-<value> ::= <text> ou <number> ou "true" ou "false" ou string entre aspas
-
-Explicações:
-
-<concept>: conteúdo completo do arquivo .concept.bus
-
-<field-list>: lista de campos definidos (um por linha)
-
-<field>: campo com nome, tipo e atributos opcionais ou campo calculado/derivado
-
-<identifier>: nome do campo, podendo terminar com `?` para nullable
-
-<type-name>: tipo do campo, podendo ser array (ex: string[], int[], endereco[])
-
-<custom-type>: tipo reutilizável definido em *.types.bus
-
-<length>: tamanho fixo de string
-
-<pattern>: expressão regular para validação
-
-<mask-or-format>: máscara visual (para entrada e exibição)
-
-<default>: valor padrão atribuído quando omitido
-
-<caption>: descrição amigável para label, tooltip, docs, IA
-
-<expression>: expressão aritmética entre campos (campo derivado)
-
-<projection>: cálculo aplicado sobre campo(s) de array (ex: sum(itens.total))
-
-Exemplo de uso:
-
-Titulo string 100 "Título do conteúdo"
-CPF cpf
-Email? string 50 \S+@\S+\.\S+ "E-mail do cliente"
-Telefones? string[] 14 \(\d{2}\)\d{5}-\d{4} "Lista de telefones"
-Endereco endereco
-DataCadastro datetime
-Ativo? bool =true "Está ativo?"
-
-// Campo calculado (linha)
-Total := (Preco * Quantidade - Desconto) "Total do item"
-
-// Campo com projeção (agregação)
-Itens ItemPedido[] "Itens do pedido"
-TotalGeral := sum(Itens.Total) "Total geral do pedido"
-QtdItens := count(Itens) "Quantidade de linhas"
-
-Regras para o compilador/VM:
-
-- Ao processar um arquivo .concept.bus, a engine:
-  - Sobe na árvore de diretórios até encontrar o *.domain.bus.
-  - Carrega as configurações globais do módulo.
-  - Aplica as regras do módulo a todos os concepts daquele diretório (e subdiretórios, se configurado).
-
-- Erro se não encontrar um módulo:
-  Ex: Módulo não definido para concept "cliente.concept.bus". Adicione um arquivo .domain.bus no diretório.
-
-- Validação cruzada:
-  O database definido no módulo pode restringir certas operações suportadas pelos concepts.
-
-Benefícios:
-- Zero repetição — o concept não precisa saber do module.
-- Organização natural por pasta.
-- Escalável: cada time pode trabalhar em seu módulo isoladamente.
-- Facilita geração automática de pacotes/API por domínio.
-
-Possibilidades futuras:
-- Suporte a múltiplos módulos com configuração central (ex: monorepo).
-- Importação de tipos entre módulos.
-
-
-# clientes.ui.bus
-
+```
 ainda pensar nesse tema
+```
 
-# common.types.bus
+### 📄 `vendas.domain.bus`
+Define domínios auxiliares como listas fixas ou regras de negócio reutilizáveis.
 
+```
 Summary:
-O type define tipos reutilizáveis com semântica própria, podendo ser simples (como cpf string) ou complexos (como endereco com campos aninhados). 
-Ele permite encapsular regras de negócio e estrutura, garantindo reuso e manutenção centralizada. Tipos definidos aqui podem ser utilizados em concepts.
+O module representa o agrupador lógico de vários concepts, e define metadados comuns a eles, como o tipo de banco de dados, descrição do domínio, e outras configurações globais.
 
-Tipos primitivos:
+Cada módulo corresponde a um domínio funcional ou técnico do sistema (ex: vendas, cadastro, estoque).
 
-Os tipos primitivos são os blocos fundamentais da linguagem. Eles representam dados básicos e são amplamente usados em concepts e types.
+Campos suportados:
+Campo | Obrigatório | Descrição
+module | ✅ | Nome do módulo
+description | opcional | Descrição curta sobre o objetivo do módulo
+database | opcional | Tipo de banco suportado pelos concepts vinculados (ex: sqlite, postgresql, sqlserver, mysql)
+date-format dd/MM/yyyy
+currency-symbol R$
 
-string
-Representa um texto simples. Pode conter letras, números, símbolos e espaços.
-Ex: Nome string
+bnf:
+<module-def> ::= "module" <whitespace> <identifier> <newline> <module-body>
 
-int
-Representa um número inteiro, positivo ou negativo.
-Ex: Idade int
+<module-body> ::= <module-line> | <module-line> <newline> <module-body>
 
-float
-Representa um número com casas decimais (ponto flutuante).
-Ex: Preco float
+<module-line> ::= "description" <whitespace> <text>
+                | "database" <whitespace> <db-type>
 
-bool
-Representa um valor booleano: true ou false.
-Ex: Ativo bool
+<db-type> ::= "sqlite" | "postgresql" | "sqlserver" | "mysql"
 
-date
-Representa uma data no formato YYYY-MM-DD.
-Ex: DataNascimento date
+<identifier> ::= <letter> { <letter> | <digit> | "_" }
 
-datetime
-Representa uma data com hora no formato YYYY-MM-DD HH:mm:ss.
-Ex: CriadoEm datetime
-
-Convenções importantes:
-- Tipos sempre em minúsculo (string, int, date).
-- Tipos definidos em *.types.bus podem ser referenciados livremente nos concepts.
-- A ideia é estender o domínio de forma semântica, ex: cpf não é só uma string — tem validação e formato.
-- Tipos podem ser definidos como array com `[]`, ex: string[], int[], endereco[]
-- Campos opcionais (nullable) devem terminar com `?`, ex: email?, ativo?, enderecos?
-
-Tipos futuros:
-
-Estes tipos ainda não são obrigatórios na primeira versão da linguagem, mas estão planejados para ampliar o poder expressivo e semântico da Bussines Lang.
-
-enum
-Representa uma lista fixa de valores possíveis.
-Ideal para status, categorias, níveis, etc.
-Ex: Status enum { Ativo, Inativo, Pendente }
-
-list<T>
-Representa uma lista de elementos do tipo T.
-Usado para coleções como itens, telefones, endereços.
-Ex: Telefones list<telefone>
-
-map<K, V>
-Representa uma estrutura de chave-valor.
-Útil para armazenar dados flexíveis ou pares dinâmicos.
-Ex: CamposPersonalizados map<string, string>
-
-file
-Representa um arquivo carregado ou armazenado.
-Pode incluir imagem, PDF, XML, etc.
-Ex: Contrato file
-
-image
-Representa uma imagem, com possível preview ou manipulação.
-Ex: FotoPerfil image
-
-money
-Representa um valor monetário com precisão adequada para cálculos financeiros.
-Ex: TotalPedido money
-
-ref<T>
-Representa uma referência a outro concept, criando relacionamento entre entidades.
-Ex: Cliente ref<cliente>
-
-BNF:
-
-<type> ::= <field-list>
-
-<field-list> ::= <field> | <field> <newline> <field-list>
-
-<field> ::= <identifier> <whitespace> <type-name> 
-            [<whitespace> <length>] 
-            [<whitespace> <pattern>] 
-            [<whitespace> <mask-or-format>] 
-            [<whitespace> <default>] 
-            [<whitespace> <caption>]
-
-<complex-type> ::= <identifier> <newline> <indent> <field-list>
-
-<identifier> ::= <name> ["?"]
-
-<name> ::= <letter> { <letter> | <digit> | "_" }
-
-<type-name> ::= <base-type> [ "[]" ]
-
-<base-type> ::= "string" | "int" | "float" | "bool" | "date" | "datetime" | <custom-type>
-
-<custom-type> ::= <identifier>
-
-<mask-or-format> ::= <text>    ; Detectado por estrutura visual (formato ou máscara)
-
-<default> ::= "=" <value>      ; Valor padrão (string, número, boolean, data)
-
-<caption> ::= "\"" <text> "\""
+<text> ::= { qualquer caractere visível }
 
 <whitespace> ::= " " | "\t"
 
 <newline> ::= "\n" | "\r\n"
 
-<indent> ::= <whitespace>+
-
 <letter> ::= "a" | ... | "z" | "A" | ... | "Z"
 
 <digit> ::= "0" | ... | "9"
 
-<value> ::= <text> ou <number> ou "true" ou "false" ou string entre aspas
+Regras de uso:
+O nome do módulo é usado como namespace para os concepts.
+O database define a base para gerar código SQL ou ORMs.
+Pode haver validações para garantir que todos os concepts do módulo estejam compatíveis com o banco especificado.
+```
 
-Explicações:
+### 📄 `erp.application.bus`
+Define a aplicação, seus módulos e configurações gerais.
 
-<type>: conteúdo completo do arquivo .types.bus
-
-<field-list>: lista de tipos definidos (um por linha ou bloco)
-
-<field>: define um tipo simples (cpf string) ou inicia um tipo complexo (endereco)
-
-<complex-type>: tipo que possui subcampos (indentados)
-
-<identifier>: nome do campo, podendo terminar com `?` para indicar que é nullable
-
-<type-name>: tipo base, podendo ser array (ex: string[], int[], endereco[])
-
-<custom-type>: referência a outro tipo definido no mesmo ou outro arquivo
-
-<length>: usado apenas com string, indica o tamanho fixo
-
-<pattern>: regex de validação (ex: \d{11})
-
-<mask-or-format>: formato visual (ex: 999.999.999-99, dd/MM/yyyy)
-
-<default>: valor atribuído quando o campo for omitido
-
-<caption>: descrição amigável exibida como tooltip, label ou ajuda
-
-Exemplo:
-
-cpf string 11 \d{11} 999.999.999-99 "Cadastro de Pessoa Física"
-email? string 50 \S+@\S+\.\S+ "E-mail do cliente"
-ativo? bool "Está ativo?" =true
-dataNascimento? date "Nascimento"
-emails? string[] 50 \S+@\S+\.\S+ "Lista de e-mails"
-
-endereco
-  rua string "Nome da rua"
-  numero int "Número da casa"
-  cep string 8 \d{8} "CEP"
-  cidade string "Cidade"
-
-enderecos? endereco[] "Lista de endereços"
-
-
-# erp.application.bus
-
+```
 Summary:
 A application representa o sistema completo, agrupando múltiplos módulos (*.domain.bus). Define configurações globais como nome da aplicação, versão, autor, e até regras globais de compilação ou geração de artefatos.
 
@@ -671,9 +748,12 @@ currency-symbol R$
 O compilador começa pelo arquivo .application.bus e varre recursivamente os diretórios.
 Todos os arquivos .domain.bus localizados abaixo dessa pasta pertencem à aplicação.
 Cada .domain.bus continua agrupando seus próprios concepts, e herda configurações globais se não definidas localmente.
+```
 
-# erp.application.settings
+### 📄 `erp.application.settings`
+Contém as configurações da aplicação como caminho da base, senha etc.
 
+```
 {
   "name": "ERP Comercial",
   "database": "/data/erp.sqlite",
@@ -683,9 +763,12 @@ Cada .domain.bus continua agrupando seus próprios concepts, e herda configuraç
   "enableSwagger": true
 }
 
+```
 
-# start.bus
+### 📄 `start.bus`
+Define quais aplicações devem ser iniciadas, com suas portas e modos de execução.
 
+```
 Summary:
 O arquivo `start.bus` define o ponto de entrada da VM da Bussines Lang, listando as aplicações que devem ser iniciadas, as portas a serem utilizadas e configurações opcionais como HTTPS e certificados. Ele é centralizado e fica fora da estrutura dos módulos.
 
@@ -810,45 +893,25 @@ sistema/                         ← Raiz das aplicações e módulos
 │       └── carrinhos/
 │           └── carrinho.concept.bus
 
+```
 
-# vendas.domain.bus
+---
 
-Summary:
-O module representa o agrupador lógico de vários concepts, e define metadados comuns a eles, como o tipo de banco de dados, descrição do domínio, e outras configurações globais.
+## ▶️ Execução
 
-Cada módulo corresponde a um domínio funcional ou técnico do sistema (ex: vendas, cadastro, estoque).
+A VM da linguagem Bussines Lang interpreta os arquivos conforme os seguintes passos:
 
-Campos suportados:
-Campo | Obrigatório | Descrição
-module | ✅ | Nome do módulo
-description | opcional | Descrição curta sobre o objetivo do módulo
-database | opcional | Tipo de banco suportado pelos concepts vinculados (ex: sqlite, postgresql, sqlserver, mysql)
-date-format dd/MM/yyyy
-currency-symbol R$
+1. Carrega o `start.bus` para identificar os módulos e aplicações.
+2. Lê as configurações da aplicação (`.settings`).
+3. Carrega todos os `.concept.bus`, `.service.bus` e `.ui.bus` declarados na aplicação.
+4. Executa os serviços conforme chamados externos ou regras internas.
 
-bnf:
-<module-def> ::= "module" <whitespace> <identifier> <newline> <module-body>
+---
 
-<module-body> ::= <module-line> | <module-line> <newline> <module-body>
+## 💡 Exemplo de uso
 
-<module-line> ::= "description" <whitespace> <text>
-                | "database" <whitespace> <db-type>
+Um exemplo de como ativar uma conta de cliente está em `cliente.ativarConta.service.bus`, usando as estruturas definidas em `cliente.concept.bus` e `common.types.bus`.
 
-<db-type> ::= "sqlite" | "postgresql" | "sqlserver" | "mysql"
+---
 
-<identifier> ::= <letter> { <letter> | <digit> | "_" }
-
-<text> ::= { qualquer caractere visível }
-
-<whitespace> ::= " " | "\t"
-
-<newline> ::= "\n" | "\r\n"
-
-<letter> ::= "a" | ... | "z" | "A" | ... | "Z"
-
-<digit> ::= "0" | ... | "9"
-
-Regras de uso:
-O nome do módulo é usado como namespace para os concepts.
-O database define a base para gerar código SQL ou ORMs.
-Pode haver validações para garantir que todos os concepts do módulo estejam compatíveis com o banco especificado.
+## ✨ Feito com amor por [Agility Soluções]
