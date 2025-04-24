@@ -1,18 +1,42 @@
-# Bussines Lang
+# 📦 Bussines Lang
 
-Este repositório contém uma implementação e exemplos da linguagem **Bussines Lang**, projetada para acelerar o desenvolvimento de aplicações empresariais com foco em agilidade, expressividade e integração com conceitos de negócios.
-
----
-
-## 📘 Visão Geral
-
-A linguagem permite definir conceitos (concepts), serviços, tipos reutilizáveis, interfaces de usuário e configurações de aplicação, tudo com uma sintaxe própria e altamente declarativa.
+**Bussines Lang** é uma linguagem de programação de domínio específico (DSL) criada para modelar aplicações empresariais com agilidade, clareza e baixo esforço técnico. Ela permite a definição de conceitos, serviços, tipos reutilizáveis e interfaces de forma declarativa, reduzindo a verbosidade e promovendo o alinhamento entre regras de negócio e execução de código.
 
 ---
 
-## 📐 Gramática
+## 🎯 Objetivo
 
-A gramática da linguagem está descrita no arquivo `bussines.bnf`:
+O principal objetivo da **Bussines Lang** é simplificar o desenvolvimento de sistemas voltados para domínios de negócios, como ERPs, CRMs e plataformas administrativas. Ela oferece uma estrutura semântica orientada a dados e regras, com foco em:
+
+- Redução do tempo de desenvolvimento
+- Clareza e legibilidade de código
+- Reutilização de tipos e estruturas
+- Integração nativa com camadas de visualização e serviços
+- Capacidade de execução por uma máquina virtual dedicada
+
+---
+
+## 🧩 Estrutura do Projeto
+
+A seguir, a descrição dos principais arquivos utilizados em projetos escritos com Bussines Lang:
+
+| Tipo de Arquivo                    | Descrição                                                                                                                                     | Benefícios                                                                 |
+|------------------------------------|-----------------------------------------------------------------------------------------------------------------------------------------------|----------------------------------------------------------------------------|
+| `.concept.bus`                     | Define entidades centrais (conceitos) com campos, tipos, validações e regras.                                                                 | Estrutura padronizada de dados, base para UI e serviços.                  |
+| `.service.bus`                     | Define serviços com entradas, saídas e implementação de lógica.                                                                               | Permite encapsular regras de negócio reutilizáveis.                       |
+| `.types.bus`                       | Define tipos primitivos e compostos reutilizáveis (ex: `cpf`, `email`, etc).                                                                  | Reduz redundância e melhora a validação dos dados.                        |
+| `.ui.bus`                          | Define a interface visual de um conceito, mapeando campos e agrupando inputs.                                                                 | Garante consistência entre o back-end semântico e o front-end.            |
+| `.domain.bus`                      | Define domínios auxiliares (ex: listas de status, enums de tipo, agrupamentos lógicos).                                                       | Melhora a organização das regras fixas e auxiliares do sistema.           |
+| `.application.bus`                | Define uma aplicação, seus módulos e configurações gerais.                                                                                     | Organiza a aplicação como um todo, centralizando suas dependências.       |
+| `.application.settings`            | Contém configurações específicas como caminho do banco de dados, portas e tokens.                                                              | Permite configurações externas, facilitando o deploy e versionamento.     |
+| `start.bus`                        | Arquivo principal que indica quais aplicações iniciar, em quais portas e como executá-las.                                                     | Facilita o boot da VM e gestão centralizada dos módulos ativos.           |
+| `.bnf` (gramática)                 | Descreve formalmente a sintaxe da linguagem utilizando Backus-Naur Form.                                                                      | Define a linguagem de forma precisa e compatível com ferramentas de parsing.|
+
+---
+
+## 📘 Gramática da Linguagem
+
+Abaixo está a gramática formal da linguagem, conforme o arquivo `bussines.bnf`:
 
 ```
 Start              ::= 'applications' Newline AppList
@@ -84,176 +108,11 @@ Path               ::= Text
 
 ---
 
-## 📁 Estrutura de Arquivos
+## 🧪 Exemplos
 
-### 📄 `common.types.bus`
-Define tipos reutilizáveis, como `cpf`, `email`, etc.
+### Concept
 
-```
-Summary:
-O type define tipos reutilizáveis com semântica própria, podendo ser simples (como cpf string) ou complexos (como endereco com campos aninhados). 
-Ele permite encapsular regras de negócio e estrutura, garantindo reuso e manutenção centralizada. Tipos definidos aqui podem ser utilizados em concepts.
-
-Tipos primitivos:
-
-Os tipos primitivos são os blocos fundamentais da linguagem. Eles representam dados básicos e são amplamente usados em concepts e types.
-
-string
-Representa um texto simples. Pode conter letras, números, símbolos e espaços.
-Ex: Nome string
-
-int
-Representa um número inteiro, positivo ou negativo.
-Ex: Idade int
-
-float
-Representa um número com casas decimais (ponto flutuante).
-Ex: Preco float
-
-bool
-Representa um valor booleano: true ou false.
-Ex: Ativo bool
-
-date
-Representa uma data no formato YYYY-MM-DD.
-Ex: DataNascimento date
-
-datetime
-Representa uma data com hora no formato YYYY-MM-DD HH:mm:ss.
-Ex: CriadoEm datetime
-
-Convenções importantes:
-- Tipos sempre em minúsculo (string, int, date).
-- Tipos definidos em *.types.bus podem ser referenciados livremente nos concepts.
-- A ideia é estender o domínio de forma semântica, ex: cpf não é só uma string — tem validação e formato.
-- Tipos podem ser definidos como array com `[]`, ex: string[], int[], endereco[]
-- Campos opcionais (nullable) devem terminar com `?`, ex: email?, ativo?, enderecos?
-
-Tipos futuros:
-
-Estes tipos ainda não são obrigatórios na primeira versão da linguagem, mas estão planejados para ampliar o poder expressivo e semântico da Bussines Lang.
-
-enum
-Representa uma lista fixa de valores possíveis.
-Ideal para status, categorias, níveis, etc.
-Ex: Status enum { Ativo, Inativo, Pendente }
-
-list<T>
-Representa uma lista de elementos do tipo T.
-Usado para coleções como itens, telefones, endereços.
-Ex: Telefones list<telefone>
-
-map<K, V>
-Representa uma estrutura de chave-valor.
-Útil para armazenar dados flexíveis ou pares dinâmicos.
-Ex: CamposPersonalizados map<string, string>
-
-file
-Representa um arquivo carregado ou armazenado.
-Pode incluir imagem, PDF, XML, etc.
-Ex: Contrato file
-
-image
-Representa uma imagem, com possível preview ou manipulação.
-Ex: FotoPerfil image
-
-money
-Representa um valor monetário com precisão adequada para cálculos financeiros.
-Ex: TotalPedido money
-
-ref<T>
-Representa uma referência a outro concept, criando relacionamento entre entidades.
-Ex: Cliente ref<cliente>
-
-BNF:
-
-<type> ::= <field-list>
-
-<field-list> ::= <field> | <field> <newline> <field-list>
-
-<field> ::= <identifier> <whitespace> <type-name> 
-            [<whitespace> <length>] 
-            [<whitespace> <pattern>] 
-            [<whitespace> <mask-or-format>] 
-            [<whitespace> <default>] 
-            [<whitespace> <caption>]
-
-<complex-type> ::= <identifier> <newline> <indent> <field-list>
-
-<identifier> ::= <name> ["?"]
-
-<name> ::= <letter> { <letter> | <digit> | "_" }
-
-<type-name> ::= <base-type> [ "[]" ]
-
-<base-type> ::= "string" | "int" | "float" | "bool" | "date" | "datetime" | <custom-type>
-
-<custom-type> ::= <identifier>
-
-<mask-or-format> ::= <text>    ; Detectado por estrutura visual (formato ou máscara)
-
-<default> ::= "=" <value>      ; Valor padrão (string, número, boolean, data)
-
-<caption> ::= "\"" <text> "\""
-
-<whitespace> ::= " " | "\t"
-
-<newline> ::= "\n" | "\r\n"
-
-<indent> ::= <whitespace>+
-
-<letter> ::= "a" | ... | "z" | "A" | ... | "Z"
-
-<digit> ::= "0" | ... | "9"
-
-<value> ::= <text> ou <number> ou "true" ou "false" ou string entre aspas
-
-Explicações:
-
-<type>: conteúdo completo do arquivo .types.bus
-
-<field-list>: lista de tipos definidos (um por linha ou bloco)
-
-<field>: define um tipo simples (cpf string) ou inicia um tipo complexo (endereco)
-
-<complex-type>: tipo que possui subcampos (indentados)
-
-<identifier>: nome do campo, podendo terminar com `?` para indicar que é nullable
-
-<type-name>: tipo base, podendo ser array (ex: string[], int[], endereco[])
-
-<custom-type>: referência a outro tipo definido no mesmo ou outro arquivo
-
-<length>: usado apenas com string, indica o tamanho fixo
-
-<pattern>: regex de validação (ex: \d{11})
-
-<mask-or-format>: formato visual (ex: 999.999.999-99, dd/MM/yyyy)
-
-<default>: valor atribuído quando o campo for omitido
-
-<caption>: descrição amigável exibida como tooltip, label ou ajuda
-
-Exemplo:
-
-cpf string 11 \d{11} 999.999.999-99 "Cadastro de Pessoa Física"
-email? string 50 \S+@\S+\.\S+ "E-mail do cliente"
-ativo? bool "Está ativo?" =true
-dataNascimento? date "Nascimento"
-emails? string[] 50 \S+@\S+\.\S+ "Lista de e-mails"
-
-endereco
-  rua string "Nome da rua"
-  numero int "Número da casa"
-  cep string 8 \d{8} "CEP"
-  cidade string "Cidade"
-
-enderecos? endereco[] "Lista de endereços"
-
-```
-
-### 📄 `cliente.concept.bus`
-Define o concept `cliente`, seus campos, tipos e validações.
+Arquivo: `cliente.concept.bus`
 
 ```
 Summary:
@@ -428,8 +287,11 @@ Possibilidades futuras:
 
 ```
 
-### 📄 `cliente.ativarConta.service.bus`
-Define um serviço relacionado ao concept `cliente`, com input/output e implementação.
+---
+
+### Service
+
+Arquivo: `cliente.ativarConta.service.bus`
 
 ```
 
@@ -633,15 +495,190 @@ implementation {
 
 ```
 
-### 📄 `clientes.ui.bus`
-Define a interface visual associada ao concept `cliente`.
+---
+
+### UI
+
+Arquivo: `clientes.ui.bus`
 
 ```
 ainda pensar nesse tema
 ```
 
-### 📄 `vendas.domain.bus`
-Define domínios auxiliares como listas fixas ou regras de negócio reutilizáveis.
+---
+
+### Tipos Reutilizáveis
+
+Arquivo: `common.types.bus`
+
+```
+Summary:
+O type define tipos reutilizáveis com semântica própria, podendo ser simples (como cpf string) ou complexos (como endereco com campos aninhados). 
+Ele permite encapsular regras de negócio e estrutura, garantindo reuso e manutenção centralizada. Tipos definidos aqui podem ser utilizados em concepts.
+
+Tipos primitivos:
+
+Os tipos primitivos são os blocos fundamentais da linguagem. Eles representam dados básicos e são amplamente usados em concepts e types.
+
+string
+Representa um texto simples. Pode conter letras, números, símbolos e espaços.
+Ex: Nome string
+
+int
+Representa um número inteiro, positivo ou negativo.
+Ex: Idade int
+
+float
+Representa um número com casas decimais (ponto flutuante).
+Ex: Preco float
+
+bool
+Representa um valor booleano: true ou false.
+Ex: Ativo bool
+
+date
+Representa uma data no formato YYYY-MM-DD.
+Ex: DataNascimento date
+
+datetime
+Representa uma data com hora no formato YYYY-MM-DD HH:mm:ss.
+Ex: CriadoEm datetime
+
+Convenções importantes:
+- Tipos sempre em minúsculo (string, int, date).
+- Tipos definidos em *.types.bus podem ser referenciados livremente nos concepts.
+- A ideia é estender o domínio de forma semântica, ex: cpf não é só uma string — tem validação e formato.
+- Tipos podem ser definidos como array com `[]`, ex: string[], int[], endereco[]
+- Campos opcionais (nullable) devem terminar com `?`, ex: email?, ativo?, enderecos?
+
+Tipos futuros:
+
+Estes tipos ainda não são obrigatórios na primeira versão da linguagem, mas estão planejados para ampliar o poder expressivo e semântico da Bussines Lang.
+
+enum
+Representa uma lista fixa de valores possíveis.
+Ideal para status, categorias, níveis, etc.
+Ex: Status enum { Ativo, Inativo, Pendente }
+
+list<T>
+Representa uma lista de elementos do tipo T.
+Usado para coleções como itens, telefones, endereços.
+Ex: Telefones list<telefone>
+
+map<K, V>
+Representa uma estrutura de chave-valor.
+Útil para armazenar dados flexíveis ou pares dinâmicos.
+Ex: CamposPersonalizados map<string, string>
+
+file
+Representa um arquivo carregado ou armazenado.
+Pode incluir imagem, PDF, XML, etc.
+Ex: Contrato file
+
+image
+Representa uma imagem, com possível preview ou manipulação.
+Ex: FotoPerfil image
+
+money
+Representa um valor monetário com precisão adequada para cálculos financeiros.
+Ex: TotalPedido money
+
+ref<T>
+Representa uma referência a outro concept, criando relacionamento entre entidades.
+Ex: Cliente ref<cliente>
+
+BNF:
+
+<type> ::= <field-list>
+
+<field-list> ::= <field> | <field> <newline> <field-list>
+
+<field> ::= <identifier> <whitespace> <type-name> 
+            [<whitespace> <length>] 
+            [<whitespace> <pattern>] 
+            [<whitespace> <mask-or-format>] 
+            [<whitespace> <default>] 
+            [<whitespace> <caption>]
+
+<complex-type> ::= <identifier> <newline> <indent> <field-list>
+
+<identifier> ::= <name> ["?"]
+
+<name> ::= <letter> { <letter> | <digit> | "_" }
+
+<type-name> ::= <base-type> [ "[]" ]
+
+<base-type> ::= "string" | "int" | "float" | "bool" | "date" | "datetime" | <custom-type>
+
+<custom-type> ::= <identifier>
+
+<mask-or-format> ::= <text>    ; Detectado por estrutura visual (formato ou máscara)
+
+<default> ::= "=" <value>      ; Valor padrão (string, número, boolean, data)
+
+<caption> ::= "\"" <text> "\""
+
+<whitespace> ::= " " | "\t"
+
+<newline> ::= "\n" | "\r\n"
+
+<indent> ::= <whitespace>+
+
+<letter> ::= "a" | ... | "z" | "A" | ... | "Z"
+
+<digit> ::= "0" | ... | "9"
+
+<value> ::= <text> ou <number> ou "true" ou "false" ou string entre aspas
+
+Explicações:
+
+<type>: conteúdo completo do arquivo .types.bus
+
+<field-list>: lista de tipos definidos (um por linha ou bloco)
+
+<field>: define um tipo simples (cpf string) ou inicia um tipo complexo (endereco)
+
+<complex-type>: tipo que possui subcampos (indentados)
+
+<identifier>: nome do campo, podendo terminar com `?` para indicar que é nullable
+
+<type-name>: tipo base, podendo ser array (ex: string[], int[], endereco[])
+
+<custom-type>: referência a outro tipo definido no mesmo ou outro arquivo
+
+<length>: usado apenas com string, indica o tamanho fixo
+
+<pattern>: regex de validação (ex: \d{11})
+
+<mask-or-format>: formato visual (ex: 999.999.999-99, dd/MM/yyyy)
+
+<default>: valor atribuído quando o campo for omitido
+
+<caption>: descrição amigável exibida como tooltip, label ou ajuda
+
+Exemplo:
+
+cpf string 11 \d{11} 999.999.999-99 "Cadastro de Pessoa Física"
+email? string 50 \S+@\S+\.\S+ "E-mail do cliente"
+ativo? bool "Está ativo?" =true
+dataNascimento? date "Nascimento"
+emails? string[] 50 \S+@\S+\.\S+ "Lista de e-mails"
+
+endereco
+  rua string "Nome da rua"
+  numero int "Número da casa"
+  cep string 8 \d{8} "CEP"
+  cidade string "Cidade"
+
+enderecos? endereco[] "Lista de endereços"
+
+```
+
+---
+
+### Domínio
+
+Arquivo: `vendas.domain.bus`
 
 ```
 Summary:
@@ -685,8 +722,11 @@ O database define a base para gerar código SQL ou ORMs.
 Pode haver validações para garantir que todos os concepts do módulo estejam compatíveis com o banco especificado.
 ```
 
-### 📄 `erp.application.bus`
-Define a aplicação, seus módulos e configurações gerais.
+---
+
+### Aplicação
+
+Arquivo: `erp.application.bus`
 
 ```
 Summary:
@@ -750,8 +790,11 @@ Todos os arquivos .domain.bus localizados abaixo dessa pasta pertencem à aplica
 Cada .domain.bus continua agrupando seus próprios concepts, e herda configurações globais se não definidas localmente.
 ```
 
-### 📄 `erp.application.settings`
-Contém as configurações da aplicação como caminho da base, senha etc.
+---
+
+### Configuração
+
+Arquivo: `erp.application.settings`
 
 ```
 {
@@ -765,8 +808,11 @@ Contém as configurações da aplicação como caminho da base, senha etc.
 
 ```
 
-### 📄 `start.bus`
-Define quais aplicações devem ser iniciadas, com suas portas e modos de execução.
+---
+
+### Inicialização
+
+Arquivo: `start.bus`
 
 ```
 Summary:
@@ -897,21 +943,21 @@ sistema/                         ← Raiz das aplicações e módulos
 
 ---
 
-## ▶️ Execução
+## 🚀 Execução
 
-A VM da linguagem Bussines Lang interpreta os arquivos conforme os seguintes passos:
+A execução de um projeto em Bussines Lang segue estes passos:
 
-1. Carrega o `start.bus` para identificar os módulos e aplicações.
-2. Lê as configurações da aplicação (`.settings`).
-3. Carrega todos os `.concept.bus`, `.service.bus` e `.ui.bus` declarados na aplicação.
-4. Executa os serviços conforme chamados externos ou regras internas.
-
----
-
-## 💡 Exemplo de uso
-
-Um exemplo de como ativar uma conta de cliente está em `cliente.ativarConta.service.bus`, usando as estruturas definidas em `cliente.concept.bus` e `common.types.bus`.
+1. A VM carrega o `start.bus` para identificar as aplicações a serem inicializadas.
+2. Lê configurações específicas no arquivo `.settings`.
+3. Carrega todos os arquivos `.concept.bus`, `.service.bus`, `.ui.bus`, `.domain.bus`.
+4. Executa os serviços de acordo com eventos internos ou chamadas externas via API.
 
 ---
 
-## ✨ Feito com amor por [Agility Soluções]
+## 🧠 Conclusão
+
+A **Bussines Lang** oferece uma abordagem moderna, centrada em domínio, para desenvolvimento de sistemas empresariais. Sua estrutura modular e semântica possibilita ganho de produtividade, menor curva de aprendizado e integração direta com visualização e serviços backend.
+
+---
+
+© Desenvolvido por Agility Soluções
